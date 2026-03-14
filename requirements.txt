@@ -1,0 +1,5 @@
+flask
+pdfplumber
+scikit-learn
+spacy
+groq

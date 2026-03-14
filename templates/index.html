@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ResumeIQ — AI-Powered Resume Analyzer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080b10;
+    --surface: #0d1117;
+    --surface2: #161b24;
+    --border: rgba(255,255,255,0.07);
+    --accent: #00e5ff;
+    --accent2: #7b61ff;
+    --accent3: #ff6b6b;
+    --success: #00e5a0;
+    --text: #e8edf5;
+    --muted: #5a6478;
+    --glow: 0 0 40px rgba(0,229,255,0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Animated mesh background */
+  .bg-mesh {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: 
+      radial-gradient(ellipse 80% 60% at 20% 10%, rgba(0,229,255,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 80% 80%, rgba(123,97,255,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 40% at 60% 30%, rgba(0,229,160,0.04) 0%, transparent 50%);
+  }
+
+  .grid-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image: 
+      linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  /* Floating orbs */
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    z-index: 0;
+    animation: float 8s ease-in-out infinite;
+  }
+  .orb-1 { width: 400px; height: 400px; background: rgba(0,229,255,0.05); top: -100px; left: -100px; animation-delay: 0s; }
+  .orb-2 { width: 300px; height: 300px; background: rgba(123,97,255,0.07); bottom: 10%; right: -80px; animation-delay: 3s; }
+  .orb-3 { width: 200px; height: 200px; background: rgba(0,229,160,0.06); top: 50%; left: 40%; animation-delay: 6s; }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-30px) scale(1.05); }
+  }
+
+  /* Layout */
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  header {
+    padding: 40px 0 60px;
+    text-align: center;
+    position: relative;
+  }
+
+  .logo-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0,229,255,0.08);
+    border: 1px solid rgba(0,229,255,0.2);
+    border-radius: 100px;
+    padding: 6px 16px;
+    margin-bottom: 28px;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    animation: fadeSlideDown 0.6s ease both;
+  }
+
+  .logo-dot {
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(40px, 6vw, 72px);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    animation: fadeSlideDown 0.6s ease 0.1s both;
+  }
+
+  h1 .word-ai {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    margin-top: 16px;
+    font-size: 14px;
+    letter-spacing: 0.02em;
+    animation: fadeSlideDown 0.6s ease 0.2s both;
+  }
+
+  @keyframes fadeSlideDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Main card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 36px;
+    position: relative;
+    overflow: hidden;
+    animation: fadeSlideUp 0.7s ease 0.3s both;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0,229,255,0.4), transparent);
+  }
+
+  @keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Upload zone */
+  .upload-zone {
+    border: 1.5px dashed rgba(0,229,255,0.2);
+    border-radius: 14px;
+    padding: 48px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: rgba(0,229,255,0.02);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: var(--accent);
+    background: rgba(0,229,255,0.05);
+    box-shadow: var(--glow);
+  }
+
+  .upload-zone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+
+  .upload-icon {
+    width: 56px; height: 56px;
+    margin: 0 auto 16px;
+    background: rgba(0,229,255,0.1);
+    border: 1px solid rgba(0,229,255,0.2);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+  }
+
+  .upload-zone:hover .upload-icon {
+    background: rgba(0,229,255,0.15);
+    transform: translateY(-3px);
+  }
+
+  .upload-icon svg { color: var(--accent); }
+
+  .upload-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .upload-sub {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .file-chosen {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    background: rgba(0,229,160,0.08);
+    border: 1px solid rgba(0,229,160,0.2);
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-top: 14px;
+    font-size: 13px;
+    color: var(--success);
+  }
+
+  .file-chosen.show { display: flex; }
+
+  /* Divider */
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 28px 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Textarea */
+  textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    resize: vertical;
+    min-height: 180px;
+    transition: border-color 0.3s;
+    outline: none;
+  }
+
+  textarea:focus {
+    border-color: rgba(0,229,255,0.3);
+    box-shadow: 0 0 0 3px rgba(0,229,255,0.06);
+  }
+
+  textarea::placeholder { color: var(--muted); }
+
+  /* Button */
+  .analyze-btn {
+    width: 100%;
+    margin-top: 24px;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: 12px;
+    color: #080b10;
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .analyze-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.2), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .analyze-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0,229,255,0.25); }
+  .analyze-btn:hover::before { opacity: 1; }
+  .analyze-btn:active { transform: translateY(0); }
+  .analyze-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .btn-content { display: flex; align-items: center; justify-content: center; gap: 10px; }
+
+  /* Loading */
+  .loading-state {
+    display: none;
+    text-align: center;
+    padding: 48px 24px;
+  }
+
+  .loading-state.show { display: block; }
+
+  .spinner {
+    width: 48px; height: 48px;
+    margin: 0 auto 20px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-text {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    color: var(--muted);
+  }
+
+  .loading-steps {
+    margin-top: 16px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .loading-steps span {
+    display: block;
+    padding: 4px 0;
+    opacity: 0;
+    animation: stepReveal 0.5s ease forwards;
+  }
+
+  .loading-steps span:nth-child(1) { animation-delay: 0.5s; }
+  .loading-steps span:nth-child(2) { animation-delay: 1.5s; }
+  .loading-steps span:nth-child(3) { animation-delay: 2.5s; }
+
+  @keyframes stepReveal {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 0.6; transform: translateX(0); }
+  }
+
+  /* Results */
+  .results {
+    display: none;
+    animation: fadeSlideUp 0.6s ease both;
+  }
+
+  .results.show { display: block; }
+
+  /* Score ring */
+  .score-section {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 32px;
+    align-items: center;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .score-section::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    opacity: 0.4;
+  }
+
+  .score-ring {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    flex-shrink: 0;
+  }
+
+  .score-ring svg { transform: rotate(-90deg); }
+
+  .score-ring .track {
+    fill: none;
+    stroke: var(--border);
+    stroke-width: 8;
+  }
+
+  .score-ring .progress {
+    fill: none;
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-dasharray: 314;
+    stroke-dashoffset: 314;
+    transition: stroke-dashoffset 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  .score-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .score-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .score-pct {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+
+  .score-info h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .score-verdict {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .score-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 100px;
+    padding: 4px 12px;
+    font-size: 11px;
+    font-weight: 500;
+    margin-bottom: 10px;
+    letter-spacing: 0.05em;
+  }
+
+  /* Skills grid */
+  .skills-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  @media (max-width: 600px) { .skills-grid { grid-template-columns: 1fr; } }
+
+  .skills-panel {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .panel-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .skill-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .skill-tag {
+    padding: 5px 12px;
+    border-radius: 100px;
+    font-size: 12px;
+    animation: tagPop 0.3s ease both;
+  }
+
+  @keyframes tagPop {
+    from { opacity: 0; transform: scale(0.85); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .tag-found {
+    background: rgba(0,229,160,0.1);
+    border: 1px solid rgba(0,229,160,0.25);
+    color: var(--success);
+  }
+
+  .tag-missing {
+    background: rgba(255,107,107,0.1);
+    border: 1px solid rgba(255,107,107,0.25);
+    color: var(--accent3);
+  }
+
+  /* AI Analysis panel */
+  .analysis-panel {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .analysis-panel::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, var(--accent), var(--accent2));
+  }
+
+  .analysis-text {
+    font-size: 13px;
+    line-height: 1.8;
+    color: #a0aec0;
+    padding-left: 4px;
+  }
+
+  .analysis-text p { margin-bottom: 12px; }
+  .analysis-text p:last-child { margin-bottom: 0; }
+
+  /* Reset btn */
+  .reset-btn {
+    margin-top: 20px;
+    padding: 12px 24px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .reset-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Error */
+  .error-box {
+    display: none;
+    background: rgba(255,107,107,0.08);
+    border: 1px solid rgba(255,107,107,0.2);
+    border-radius: 12px;
+    padding: 16px 20px;
+    color: var(--accent3);
+    font-size: 13px;
+    margin-top: 16px;
+    line-height: 1.6;
+  }
+
+  .error-box.show { display: block; }
+
+  /* Rewrite panel */
+  .rewrite-panel {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .rewrite-panel::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, var(--accent2), #ff6b6b);
+  }
+
+  .rewrite-trigger-btn {
+    width: 100%;
+    margin-top: 0;
+    padding: 14px;
+    background: rgba(123,97,255,0.1);
+    border: 1px solid rgba(123,97,255,0.3);
+    border-radius: 12px;
+    color: var(--accent2);
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .rewrite-trigger-btn:hover {
+    background: rgba(123,97,255,0.18);
+    border-color: var(--accent2);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(123,97,255,0.2);
+  }
+
+  .rewrite-trigger-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .rewrite-loading {
+    display: none;
+    text-align: center;
+    padding: 24px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .rewrite-loading.show { display: block; }
+
+  .rewrite-mini-spinner {
+    width: 24px; height: 24px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent2);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 10px;
+  }
+
+  .rewrite-list { display: flex; flex-direction: column; gap: 16px; }
+
+  .rewrite-card {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    animation: fadeSlideUp 0.4s ease both;
+  }
+
+  .rewrite-before {
+    padding: 14px 16px;
+    background: rgba(255,107,107,0.05);
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    color: #a0aec0;
+    line-height: 1.7;
+    position: relative;
+  }
+
+  .rewrite-after {
+    padding: 14px 16px;
+    background: rgba(0,229,160,0.04);
+    font-size: 12px;
+    color: var(--text);
+    line-height: 1.7;
+  }
+
+  .rewrite-label {
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .rewrite-reason {
+    padding: 10px 16px;
+    background: rgba(123,97,255,0.05);
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--muted);
+    font-style: italic;
+    line-height: 1.6;
+  }
+
+  .copy-btn {
+    float: right;
+    background: rgba(0,229,160,0.1);
+    border: 1px solid rgba(0,229,160,0.2);
+    border-radius: 6px;
+    color: var(--success);
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    padding: 3px 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-left: 8px;
+  }
+
+  .copy-btn:hover { background: rgba(0,229,160,0.2); }
+
+  /* Footer */
+  footer {
+    text-align: center;
+    padding: 40px 0;
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: 0.05em;
+  }
+
+  /* Scan line animation */
+  @keyframes scanline {
+    from { transform: translateY(-100%); }
+    to { transform: translateY(200%); }
+  }
+
+  .scan-line {
+    position: absolute;
+    left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(0,229,255,0.3), transparent);
+    pointer-events: none;
+    animation: scanline 2s ease-in-out;
+    animation-fill-mode: both;
+  }
+
+  /* Tooltip */
+  .tip {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .tip svg { opacity: 0.4; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<div class="bg-mesh"></div>
+<div class="grid-overlay"></div>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<div class="container">
+  <header>
+    <h1>Resume<span class="word-ai">IQ</span></h1>
+    <p class="subtitle">Drop your resume. Paste the job. Get your real shot at getting hired.</p>
+  </header>
+
+  <!-- INPUT CARD -->
+  <div class="card" id="inputCard">
+    <div class="upload-zone" id="dropzone">
+      <input type="file" id="resumeFile" accept=".pdf,.txt,.doc,.docx" />
+      <div class="upload-icon">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m6.75 12l-3-3m0 0l-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+        </svg>
+      </div>
+      <div class="upload-label">Drop your resume here</div>
+      <div class="upload-sub">PDF, DOCX, or plain text — up to 5MB</div>
+    </div>
+
+    <div class="file-chosen" id="fileChosen">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      <span id="fileName">resume.pdf</span>
+    </div>
+
+    <div class="section-label">Job Description</div>
+
+    <textarea id="jobDesc" placeholder="Paste the full job description here — the more detail, the better the analysis..."></textarea>
+
+    <p class="tip">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/>
+      </svg>
+      Include skills, requirements, and responsibilities for the most accurate analysis
+    </p>
+
+    <button class="analyze-btn" id="analyzeBtn" onclick="analyzeResume()">
+      <div class="btn-content">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
+        </svg>
+        Analyze My Resume
+      </div>
+    </button>
+
+    <div class="error-box" id="errorBox"></div>
+  </div>
+
+  <!-- LOADING STATE -->
+  <div class="card loading-state" id="loadingCard">
+    <div class="spinner"></div>
+    <div class="loading-text">Analyzing your resume...</div>
+    <div class="loading-steps">
+      <span>→ Parsing resume content</span>
+      <span>→ Mapping skills against job requirements</span>
+      <span>→ Generating personalized recommendations</span>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results" id="results">
+    <!-- Score Section -->
+    <div class="score-section">
+      <div class="score-ring">
+        <svg width="120" height="120" viewBox="0 0 120 120">
+          <circle class="track" cx="60" cy="60" r="50"/>
+          <circle class="progress" id="scoreRing" cx="60" cy="60" r="50"/>
+        </svg>
+        <div class="score-center">
+          <div class="score-num" id="scoreNum">0</div>
+          <div class="score-pct">match</div>
+        </div>
+      </div>
+      <div class="score-info">
+        <div class="score-badge" id="scoreBadge"></div>
+        <h2 id="scoreTitle">Your Match Score</h2>
+        <p class="score-verdict" id="scoreVerdict"></p>
+      </div>
+    </div>
+
+    <!-- Skills Grid -->
+    <div class="skills-grid">
+      <div class="skills-panel">
+        <div class="panel-header">
+          <div class="panel-dot" style="background: var(--success)"></div>
+          Skills Matched
+        </div>
+        <div class="skill-tags" id="foundSkills"></div>
+      </div>
+      <div class="skills-panel">
+        <div class="panel-header">
+          <div class="panel-dot" style="background: var(--accent3)"></div>
+          Skills to Add
+        </div>
+        <div class="skill-tags" id="missingSkills"></div>
+      </div>
+    </div>
+
+    <!-- AI Analysis -->
+    <div class="analysis-panel">
+      <div class="panel-header" style="margin-bottom: 16px;">
+        <svg width="16" height="16" fill="none" stroke="var(--accent)" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
+        </svg>
+        AI Recommendations
+      </div>
+      <div class="analysis-text" id="aiAnalysis"></div>
+    </div>
+
+    <!-- Rewrite Suggestions -->
+    <button class="rewrite-trigger-btn" id="rewriteBtn" onclick="getRewriteSuggestions()">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/>
+      </svg>
+      ✨ Rewrite My Resume Bullets with AI
+    </button>
+
+    <div class="rewrite-loading" id="rewriteLoading">
+      <div class="rewrite-mini-spinner"></div>
+      Rewriting your bullets for this specific role...
+    </div>
+
+    <div class="rewrite-panel" id="rewritePanel" style="display:none;">
+      <div class="panel-header" style="margin-bottom: 16px;">
+        <svg width="16" height="16" fill="none" stroke="var(--accent2)" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"/>
+        </svg>
+        Before / After Rewrites
+      </div>
+      <div class="rewrite-list" id="rewriteList"></div>
+    </div>
+
+    <button class="reset-btn" onclick="resetApp()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/>
+      </svg>
+      Analyze Another Resume
+    </button>
+  </div>
+
+  <footer>
+    ResumeIQ
+  </footer>
+</div>
+
+<script>
+let resumeFile = null;
+let savedFilename = null;
+
+// File drag & drop
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('resumeFile');
+
+dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
+dropzone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropzone.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) handleFile(file);
+});
+
+fileInput.addEventListener('change', e => {
+  if (e.target.files[0]) handleFile(e.target.files[0]);
+});
+
+function handleFile(file) {
+  if (file.size > 5 * 1024 * 1024) {
+    showError('File too large. Please upload a file under 5MB.'); return;
+  }
+  resumeFile = file;
+  document.getElementById('fileName').textContent = file.name;
+  document.getElementById('fileChosen').classList.add('show');
+}
+
+function showError(msg) {
+  const box = document.getElementById('errorBox');
+  box.textContent = msg;
+  box.classList.add('show');
+  setTimeout(() => box.classList.remove('show'), 6000);
+}
+
+async function analyzeResume() {
+  const jobDesc = document.getElementById('jobDesc').value.trim();
+
+  if (!resumeFile) { showError('Please upload your resume first.'); return; }
+  if (!jobDesc) { showError('Please paste the job description.'); return; }
+
+  document.getElementById('inputCard').style.display = 'none';
+  document.getElementById('loadingCard').classList.add('show');
+  document.getElementById('results').classList.remove('show');
+
+  try {
+    const formData = new FormData();
+    formData.append('resume', resumeFile);
+    formData.append('job_desc', jobDesc);
+
+    const response = await fetch('/analyze', {
+      method: 'POST',
+      body: formData
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error || 'Server error');
+    }
+
+    const result = await response.json();
+    savedFilename = resumeFile.name;
+    renderResults(result);
+
+  } catch (err) {
+    document.getElementById('loadingCard').classList.remove('show');
+    document.getElementById('inputCard').style.display = 'block';
+    showError('Analysis failed: ' + (err.message || 'Unknown error. Please try again.'));
+  }
+}
+
+function renderResults(data) {
+  document.getElementById('loadingCard').classList.remove('show');
+
+  const score = Math.min(100, Math.max(0, data.score || 0));
+
+  // Score ring
+  const ring = document.getElementById('scoreRing');
+  const circumference = 314;
+  const offset = circumference - (score / 100) * circumference;
+
+  // Color based on score
+  let color, badgeColor, badgeBg, badgeText;
+  if (score >= 75) {
+    color = '#00e5a0'; badgeText = '🎯 Strong Match';
+    badgeColor = 'rgba(0,229,160,0.25)'; badgeBg = 'rgba(0,229,160,0.1)';
+  } else if (score >= 50) {
+    color = '#00e5ff'; badgeText = '⚡ Good Potential';
+    badgeColor = 'rgba(0,229,255,0.25)'; badgeBg = 'rgba(0,229,255,0.1)';
+  } else {
+    color = '#ff6b6b'; badgeText = '🔧 Needs Work';
+    badgeColor = 'rgba(255,107,107,0.25)'; badgeBg = 'rgba(255,107,107,0.1)';
+  }
+
+  ring.style.stroke = color;
+  ring.style.filter = `drop-shadow(0 0 8px ${color}60)`;
+
+  // Animate score
+  setTimeout(() => {
+    ring.style.strokeDashoffset = offset;
+    animateNumber(document.getElementById('scoreNum'), 0, score, 1400);
+  }, 100);
+
+  document.getElementById('scoreNum').style.color = color;
+
+  const badge = document.getElementById('scoreBadge');
+  badge.textContent = badgeText;
+  badge.style.background = badgeBg;
+  badge.style.border = `1px solid ${badgeColor}`;
+  badge.style.color = color;
+
+  document.getElementById('scoreTitle').textContent = data.title || 'Your Match Score';
+  document.getElementById('scoreVerdict').textContent = data.verdict || '';
+
+  // Skills
+  const foundContainer = document.getElementById('foundSkills');
+  const missingContainer = document.getElementById('missingSkills');
+  foundContainer.innerHTML = '';
+  missingContainer.innerHTML = '';
+
+  (data.found_skills || []).forEach((skill, i) => {
+    const tag = document.createElement('div');
+    tag.className = 'skill-tag tag-found';
+    tag.textContent = skill;
+    tag.style.animationDelay = (i * 0.05) + 's';
+    foundContainer.appendChild(tag);
+  });
+
+  (data.missing_skills || []).forEach((skill, i) => {
+    const tag = document.createElement('div');
+    tag.className = 'skill-tag tag-missing';
+    tag.textContent = skill;
+    tag.style.animationDelay = (i * 0.05) + 's';
+    missingContainer.appendChild(tag);
+  });
+
+  // AI Analysis
+  const analysisEl = document.getElementById('aiAnalysis');
+  const recs = data.recommendations || 'No specific recommendations at this time.';
+  analysisEl.innerHTML = recs.split('\n').filter(p => p.trim()).map(p => `<p>${p}</p>`).join('');
+
+  document.getElementById('results').classList.add('show');
+}
+
+function animateNumber(el, from, to, duration) {
+  const start = performance.now();
+  function update(time) {
+    const elapsed = time - start;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 4);
+    el.textContent = Math.round(from + (to - from) * eased) + '%';
+    if (progress < 1) requestAnimationFrame(update);
+  }
+  requestAnimationFrame(update);
+}
+
+async function getRewriteSuggestions() {
+  const jobDesc = document.getElementById('jobDesc').value.trim();
+  if (!savedFilename || !jobDesc) { showError('Missing resume or job description.'); return; }
+
+  const btn = document.getElementById('rewriteBtn');
+  btn.disabled = true;
+  btn.style.display = 'none';
+  document.getElementById('rewriteLoading').classList.add('show');
+
+  try {
+    const formData = new FormData();
+    formData.append('filename', savedFilename);
+    formData.append('job_desc', jobDesc);
+
+    const response = await fetch('/rewrite', { method: 'POST', body: formData });
+    if (!response.ok) { const e = await response.json(); throw new Error(e.error); }
+
+    const data = await response.json();
+    renderRewrites(data.rewrites);
+  } catch (err) {
+    btn.style.display = 'flex';
+    btn.disabled = false;
+    showError('Rewrite failed: ' + (err.message || 'Please try again.'));
+  } finally {
+    document.getElementById('rewriteLoading').classList.remove('show');
+  }
+}
+
+function renderRewrites(rewrites) {
+  const panel = document.getElementById('rewritePanel');
+  const list = document.getElementById('rewriteList');
+  list.innerHTML = '';
+
+  rewrites.forEach((item, i) => {
+    const card = document.createElement('div');
+    card.className = 'rewrite-card';
+    card.style.animationDelay = (i * 0.08) + 's';
+    card.innerHTML = `
+      <div class="rewrite-before">
+        <div class="rewrite-label" style="color: var(--accent3)">
+          <svg width="10" height="10" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+          Before
+        </div>
+        ${escHtml(item.original)}
+      </div>
+      <div class="rewrite-after">
+        <button class="copy-btn" onclick="copyText(this, '${escAttr(item.rewritten)}')">copy</button>
+        <div class="rewrite-label" style="color: var(--success)">
+          <svg width="10" height="10" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+          After
+        </div>
+        ${escHtml(item.rewritten)}
+      </div>
+      <div class="rewrite-reason">💡 ${escHtml(item.reason)}</div>
+    `;
+    list.appendChild(card);
+  });
+
+  panel.style.display = 'block';
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function escAttr(str) {
+  return String(str).replace(/'/g, "\\'").replace(/"/g, '\\"');
+}
+
+function copyText(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✓ copied';
+    setTimeout(() => btn.textContent = 'copy', 2000);
+  });
+}
+
+
+function resetApp() {
+  resumeFile = null;
+  savedFilename = null;
+  document.getElementById('resumeFile').value = '';
+  document.getElementById('jobDesc').value = '';
+  document.getElementById('fileChosen').classList.remove('show');
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('loadingCard').classList.remove('show');
+  document.getElementById('inputCard').style.display = 'block';
+  document.getElementById('errorBox').classList.remove('show');
+  document.getElementById('scoreRing').style.strokeDashoffset = '314';
+  document.getElementById('rewritePanel').style.display = 'none';
+  document.getElementById('rewriteList').innerHTML = '';
+  document.getElementById('rewriteLoading').classList.remove('show');
+  const btn = document.getElementById('rewriteBtn');
+  btn.style.display = 'flex';
+  btn.disabled = false;
+}
+</script>
+</body>
+</html>
