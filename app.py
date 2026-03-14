@@ -17,7 +17,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 # Groq client
-ai_client = Groq(api_key="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")
+ai_client = Groq(api_key="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")
 
 
 @app.route("/")
