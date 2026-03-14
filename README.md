@@ -108,4 +108,4 @@ Before/After cards displayed with one-click copy
 
 **Roshan Kamath**
 - GitHub: [@roshan-kamath](https://github.com/roshan-kamath)
-- LinkedIn: [your linkedin here]
+- LinkedIn: www.linkedin.com/in/roshan-kamath-9806b337b
