@@ -1,7 +1,5 @@
 # ResumeIQ — AI-Powered Resume Analyzer
 
-I kept seeing people apply to jobs with resumes that had zero alignment to the role — including mine. Nobody tells you why you're not getting callbacks. So I built a tool that does.
-
 🔗 **Live Demo:** https://ai-resume-analyzer-production-768b.up.railway.app  
 🐙 **GitHub:** https://github.com/roshan-kamath/AI-Resume-Analyzer
 
