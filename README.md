@@ -1,8 +1,9 @@
 # ResumeIQ — AI-Powered Resume Analyzer
 
-A full-stack web app that scores your resume against any job description, detects skill gaps using NLP, and rewrites your resume bullets with AI.
+I kept seeing people apply to jobs with resumes that had zero alignment to the role — including mine. Nobody tells you why you're not getting callbacks. So I built a tool that does.
 
-🔗 **Live Demo:** https://ai-resume-analyzer-production-768b.up.railway.app
+🔗 **Live Demo:** https://ai-resume-analyzer-production-768b.up.railway.app  
+🐙 **GitHub:** https://github.com/roshan-kamath/AI-Resume-Analyzer
 
 ---
 
@@ -10,9 +11,9 @@ A full-stack web app that scores your resume against any job description, detect
 
 - 📄 Upload your resume as a PDF
 - 📋 Paste any job description
-- 📊 Get an instant match score powered by TF-IDF cosine similarity
-- 🧠 See exactly which skills you have vs what's missing (powered by spaCy NER)
-- ✍️ Click one button and watch AI rewrite your resume bullets — stronger action verbs, quantified metrics, tailored to the role
+- 📊 Get an instant match score (TF-IDF cosine similarity)
+- 🧠 See exactly which skills you have vs what's missing (spaCy NER)
+- ✍️ One click — AI rewrites your resume bullets with stronger verbs, metrics, and keywords tailored to that specific role
 
 ---
 
@@ -52,19 +53,19 @@ python -m spacy download en_core_web_md
 
 **4. Set your Groq API key**
 
-Get a free key at [console.groq.com](https://console.groq.com)
+Get a free key at [console.groq.com](https://console.groq.com) — no credit card needed.
 
-```bash
+```python
 # In app.py line 20:
 ai_client = Groq(api_key="your_groq_key_here")
 ```
 
-**5. Run the app**
+**5. Run**
 ```bash
 python app.py
 ```
 
-Open `http://127.0.0.1:5000` in your browser.
+Open `http://127.0.0.1:5000`
 
 ---
 
@@ -104,8 +105,16 @@ Before/After cards displayed with one-click copy
 
 ---
 
+## Lessons Learned
+
+First time working with NLP and spaCy. It took me a while to understand why semantic similarity beats a hardcoded keyword list — but once it clicked, the difference was obvious. Also learned the hard way that browser file references break between two fetch calls, which is why the rewrite endpoint uses the already-saved file instead of re-uploading.
+
+Went from zero deployment experience to a live Railway app with env variables and auto-deploy on push. Broke things multiple times. Fixed all of them.
+
+---
+
 ## Author
 
-**Roshan Kamath**
-- GitHub: [@roshan-kamath](https://github.com/roshan-kamath)
+**Roshan Kamath**  
+- GitHub: [@roshan-kamath](https://github.com/roshan-kamath)  
 - LinkedIn: www.linkedin.com/in/roshan-kamath-9806b337b
