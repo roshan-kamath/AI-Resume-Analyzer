@@ -17,8 +17,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 # Groq client
-ai_client = Groq(api_key="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")
-
+ai_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
 @app.route("/")
 def index():
@@ -132,4 +131,4 @@ Return ONLY a JSON array with this exact structure, no markdown, no explanation:
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
